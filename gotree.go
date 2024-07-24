@@ -14,6 +14,8 @@ const (
 )
 
 type (
+	Str string
+
 	tree struct {
 		item     TreeItemText
 		children []Tree
@@ -40,6 +42,10 @@ type (
 		Print(Tree) string
 	}
 )
+
+func (s Str) TreeItemText() string {
+	return string(s)
+}
 
 // New returns a new GoTree.Tree
 func New(s TreeItemText) Tree {

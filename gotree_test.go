@@ -6,22 +6,16 @@ import (
 	"testing"
 )
 
-type simpleString string
-
-func (s simpleString) TreeItemText() string {
-	return string(s)
-}
-
 func ExampleTree() {
 	artist := newTestTree("Pantera")
-	album := artist.Add(simpleString("Far Beyond Driven\nsee https://en.wikipedia.org/wiki/Pantera\n(1994)"))
-	five := album.Add(simpleString("5 minutes Alone"))
-	five.Add(simpleString("song by American\ngroove metal"))
-	album.Add(simpleString("I’m Broken"))
-	album.Add(simpleString("Good Friends and a Bottle of Pills"))
+	album := artist.Add(Str("Far Beyond Driven\nsee https://en.wikipedia.org/wiki/Pantera\n(1994)"))
+	five := album.Add(Str("5 minutes Alone"))
+	five.Add(Str("song by American\ngroove metal"))
+	album.Add(Str("I’m Broken"))
+	album.Add(Str("Good Friends and a Bottle of Pills"))
 
-	artist.Add(simpleString("Power Metal\n(1988)"))
-	artist.Add(simpleString("Cowboys from Hell\n(1990)"))
+	artist.Add(Str("Power Metal\n(1988)"))
+	artist.Add(Str("Cowboys from Hell\n(1990)"))
 	fmt.Println(artist.Print())
 
 	// Output:
@@ -41,7 +35,7 @@ func ExampleTree() {
 }
 
 func newTestTree(s string) Tree {
-	return New(simpleString(s))
+	return New(Str(s))
 }
 
 func TestnewTestTree(t *testing.T) {
@@ -59,7 +53,7 @@ func TestnewTestTree(t *testing.T) {
 				text: "new tree",
 			},
 			want: &tree{
-				item:     simpleString("new tree"),
+				item:     Str("new tree"),
 				children: []Tree{},
 			},
 		},
@@ -97,7 +91,7 @@ func Test_tree_Add(t *testing.T) {
 				items: []Tree{},
 			},
 			want: &tree{
-				item:     simpleString("child item"),
+				item:     Str("child item"),
 				children: []Tree{},
 			},
 			parentCount: 1,
@@ -115,7 +109,7 @@ func Test_tree_Add(t *testing.T) {
 				},
 			},
 			want: &tree{
-				item:     simpleString("fourth item"),
+				item:     Str("fourth item"),
 				children: []Tree{},
 			},
 			parentCount: 4,
@@ -124,10 +118,10 @@ func Test_tree_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				item:     simpleString(tt.fields.text),
+				item:     Str(tt.fields.text),
 				children: tt.fields.items,
 			}
-			got := tree.Add(simpleString(tt.args.text))
+			got := tree.Add(Str(tt.args.text))
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("tree.Add() = %v, want %v", got, tt.want)
 			}
@@ -180,7 +174,7 @@ func Test_tree_AddTree(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				item:     simpleString(tt.fields.text),
+				item:     Str(tt.fields.text),
 				children: tt.fields.items,
 			}
 			tree.AddTree(tt.args.tree)
@@ -216,7 +210,7 @@ func Test_tree_Text(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				item:     simpleString(tt.fields.text),
+				item:     Str(tt.fields.text),
 				children: tt.fields.items,
 			}
 			if got := tree.Item().TreeItemText(); got != tt.want {
@@ -262,7 +256,7 @@ func Test_tree_Items(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				item:     simpleString(tt.fields.text),
+				item:     Str(tt.fields.text),
 				children: tt.fields.items,
 			}
 			if got := tree.Items(); !reflect.DeepEqual(got, tt.want) {
@@ -274,19 +268,19 @@ func Test_tree_Items(t *testing.T) {
 
 func Test_tree_Print(t *testing.T) {
 	threeLevelTree := newTestTree("First Level")
-	threeLevelTree.Add(simpleString("Second level")).Add(simpleString("Third Level"))
+	threeLevelTree.Add(Str("Second level")).Add(Str("Third Level"))
 
 	complexTree := newTestTree("Daft Punk")
-	ram := complexTree.Add(simpleString("Random Access Memories"))
-	complexTree.Add(simpleString("Humam After All"))
-	alive := complexTree.Add(simpleString("Alive 2007"))
+	ram := complexTree.Add(Str("Random Access Memories"))
+	complexTree.Add(Str("Humam After All"))
+	alive := complexTree.Add(Str("Alive 2007"))
 
-	ram.Add(simpleString("Give Life Back to Music"))
-	ram.Add(simpleString("Giorgio by Moroder"))
-	ram.Add(simpleString("Within"))
+	ram.Add(Str("Give Life Back to Music"))
+	ram.Add(Str("Giorgio by Moroder"))
+	ram.Add(Str("Within"))
 
-	alive.Add(simpleString("Touch It/Technologic"))
-	alive.Add(simpleString("Face to Face/Too Long"))
+	alive.Add(Str("Touch It/Technologic"))
+	alive.Add(Str("Face to Face/Too Long"))
 
 	type fields struct {
 		tree Tree
