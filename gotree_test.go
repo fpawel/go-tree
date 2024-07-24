@@ -6,16 +6,22 @@ import (
 	"testing"
 )
 
-func ExampleTree() {
-	artist := New("Pantera")
-	album := artist.Add("Far Beyond Driven\nsee https://en.wikipedia.org/wiki/Pantera\n(1994)")
-	five := album.Add("5 minutes Alone")
-	five.Add("song by American\ngroove metal")
-	album.Add("I’m Broken")
-	album.Add("Good Friends and a Bottle of Pills")
+type simpleString string
 
-	artist.Add("Power Metal\n(1988)")
-	artist.Add("Cowboys from Hell\n(1990)")
+func (s simpleString) TreeItemText() string {
+	return string(s)
+}
+
+func ExampleTree() {
+	artist := newTestTree("Pantera")
+	album := artist.Add(simpleString("Far Beyond Driven\nsee https://en.wikipedia.org/wiki/Pantera\n(1994)"))
+	five := album.Add(simpleString("5 minutes Alone"))
+	five.Add(simpleString("song by American\ngroove metal"))
+	album.Add(simpleString("I’m Broken"))
+	album.Add(simpleString("Good Friends and a Bottle of Pills"))
+
+	artist.Add(simpleString("Power Metal\n(1988)"))
+	artist.Add(simpleString("Cowboys from Hell\n(1990)"))
 	fmt.Println(artist.Print())
 
 	// Output:
@@ -34,7 +40,11 @@ func ExampleTree() {
 	//     (1990)
 }
 
-func TestNew(t *testing.T) {
+func newTestTree(s string) Tree {
+	return New(simpleString(s))
+}
+
+func TestnewTestTree(t *testing.T) {
 	type args struct {
 		text string
 	}
@@ -49,15 +59,15 @@ func TestNew(t *testing.T) {
 				text: "new tree",
 			},
 			want: &tree{
-				text:  "new tree",
-				items: []Tree{},
+				item:     simpleString("new tree"),
+				children: []Tree{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.text); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
+			if got := newTestTree(tt.args.text); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newTestTree() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -87,8 +97,8 @@ func Test_tree_Add(t *testing.T) {
 				items: []Tree{},
 			},
 			want: &tree{
-				text:  "child item",
-				items: []Tree{},
+				item:     simpleString("child item"),
+				children: []Tree{},
 			},
 			parentCount: 1,
 		},
@@ -99,14 +109,14 @@ func Test_tree_Add(t *testing.T) {
 			},
 			fields: fields{
 				items: []Tree{
-					New("test"),
-					New("test2"),
-					New("test3"),
+					newTestTree("test"),
+					newTestTree("test2"),
+					newTestTree("test3"),
 				},
 			},
 			want: &tree{
-				text:  "fourth item",
-				items: []Tree{},
+				item:     simpleString("fourth item"),
+				children: []Tree{},
 			},
 			parentCount: 4,
 		},
@@ -114,15 +124,15 @@ func Test_tree_Add(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				text:  tt.fields.text,
-				items: tt.fields.items,
+				item:     simpleString(tt.fields.text),
+				children: tt.fields.items,
 			}
-			got := tree.Add(tt.args.text)
+			got := tree.Add(simpleString(tt.args.text))
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("tree.Add() = %v, want %v", got, tt.want)
 			}
 			if tt.parentCount != len(tree.Items()) {
-				t.Errorf("tree total items = %v, want %v", got, tt.want)
+				t.Errorf("tree total children = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -145,7 +155,7 @@ func Test_tree_AddTree(t *testing.T) {
 		{
 			name: "Adding a new item into an empty tree",
 			args: args{
-				tree: New("child item"),
+				tree: newTestTree("child item"),
 			},
 			fields: fields{
 				items: []Tree{},
@@ -155,13 +165,13 @@ func Test_tree_AddTree(t *testing.T) {
 		{
 			name: "Adding a new item into a full tree",
 			args: args{
-				tree: New("fourth item"),
+				tree: newTestTree("fourth item"),
 			},
 			fields: fields{
 				items: []Tree{
-					New("test"),
-					New("test2"),
-					New("test3"),
+					newTestTree("test"),
+					newTestTree("test2"),
+					newTestTree("test3"),
 				},
 			},
 			itemCount: 4,
@@ -170,8 +180,8 @@ func Test_tree_AddTree(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				text:  tt.fields.text,
-				items: tt.fields.items,
+				item:     simpleString(tt.fields.text),
+				children: tt.fields.items,
 			}
 			tree.AddTree(tt.args.tree)
 		})
@@ -206,10 +216,10 @@ func Test_tree_Text(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				text:  tt.fields.text,
-				items: tt.fields.items,
+				item:     simpleString(tt.fields.text),
+				children: tt.fields.items,
 			}
-			if got := tree.Text(); got != tt.want {
+			if got := tree.Item().TreeItemText(); got != tt.want {
 				t.Errorf("tree.Text() = %v, want %v", got, tt.want)
 			}
 		})
@@ -227,7 +237,7 @@ func Test_tree_Items(t *testing.T) {
 		want   []Tree
 	}{
 		{
-			name: "Return empty if there is no items under the tree",
+			name: "Return empty if there is no children under the tree",
 			fields: fields{
 				text:  "top level item",
 				items: []Tree{},
@@ -235,25 +245,25 @@ func Test_tree_Items(t *testing.T) {
 			want: []Tree{},
 		},
 		{
-			name: "Return all items under the tree",
+			name: "Return all children under the tree",
 			fields: fields{
 				text: "top level item",
 				items: []Tree{
-					New("first child"),
-					New("second child"),
+					newTestTree("first child"),
+					newTestTree("second child"),
 				},
 			},
 			want: []Tree{
-				New("first child"),
-				New("second child"),
+				newTestTree("first child"),
+				newTestTree("second child"),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tree := &tree{
-				text:  tt.fields.text,
-				items: tt.fields.items,
+				item:     simpleString(tt.fields.text),
+				children: tt.fields.items,
 			}
 			if got := tree.Items(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("tree.Items() = %v, want %v", got, tt.want)
@@ -263,20 +273,20 @@ func Test_tree_Items(t *testing.T) {
 }
 
 func Test_tree_Print(t *testing.T) {
-	threeLevelTree := New("First Level")
-	threeLevelTree.Add("Second level").Add("Third Level")
+	threeLevelTree := newTestTree("First Level")
+	threeLevelTree.Add(simpleString("Second level")).Add(simpleString("Third Level"))
 
-	complexTree := New("Daft Punk")
-	ram := complexTree.Add("Random Access Memories")
-	complexTree.Add("Humam After All")
-	alive := complexTree.Add("Alive 2007")
+	complexTree := newTestTree("Daft Punk")
+	ram := complexTree.Add(simpleString("Random Access Memories"))
+	complexTree.Add(simpleString("Humam After All"))
+	alive := complexTree.Add(simpleString("Alive 2007"))
 
-	ram.Add("Give Life Back to Music")
-	ram.Add("Giorgio by Moroder")
-	ram.Add("Within")
+	ram.Add(simpleString("Give Life Back to Music"))
+	ram.Add(simpleString("Giorgio by Moroder"))
+	ram.Add(simpleString("Within"))
 
-	alive.Add("Touch It/Technologic")
-	alive.Add("Face to Face/Too Long")
+	alive.Add(simpleString("Touch It/Technologic"))
+	alive.Add(simpleString("Face to Face/Too Long"))
 
 	type fields struct {
 		tree Tree
@@ -289,7 +299,7 @@ func Test_tree_Print(t *testing.T) {
 		{
 			name: "Print a single item tree",
 			fields: fields{
-				tree: New("single item"),
+				tree: newTestTree("single item"),
 			},
 			want: `single item
 `,
